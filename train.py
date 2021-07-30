@@ -50,8 +50,8 @@ os.makedirs(CHECKPOINT_DIR, exist_ok=True)
 # with mirrored_strategy.scope():
 # 여기다 하세요 gpu :0
 #     print("Number of devices: {}".format(mirrored_strategy.num_replicas_in_sync))
-
-    dataset_config = GenerateDatasets(mode='HKU', image_size=(224, 224), batch_size=1)
+with tf.device('/device:GPU:0'):
+    dataset_config = GenerateDatasets(mode='HKU', image_size=IMAGE_SIZE, batch_size=BATCH_SIZE)
 
     train_data = dataset_config.get_trainData(dataset_config.train_data)
     valid_data = dataset_config.get_validData(dataset_config.valid_data)
@@ -91,8 +91,7 @@ os.makedirs(CHECKPOINT_DIR, exist_ok=True)
 
     model.compile(
         optimizer=optimizer,
-        loss=focal_loss,
-        metrics='mse')
+        loss=focal_loss)
 
     if LOAD_WEIGHT:
         weight_name = 'city_0726_best_loss'

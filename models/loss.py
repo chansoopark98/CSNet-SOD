@@ -2,7 +2,7 @@ import tensorflow as tf
 
 def focal_loss(y_true, y_pred):
     gamma = 1.5
-    y_true = tf.argmax(y_true, axis=-1)
+    y_true = tf.squeeze(y_true, axis=-1)
 
     probs = tf.nn.softmax(y_pred, axis=-1)
 

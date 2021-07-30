@@ -46,7 +46,7 @@ class GenerateDatasets:
 
         for i, j in enumerate(msra10k_img_path):
             msra10k_img_list.append(valid_img_path + j)
-            msra10k_gt_list.append(valid_gt_path + j)
+            msra10k_gt_list.append(valid_gt_path + j.split('.')[0] + '.png')
 
 
 
@@ -78,15 +78,21 @@ class GenerateDatasets:
     @tf.function
     def preprocess(self, img, labels):
         img = tf.io.read_file(img)
-        lables = tf.io.read_file(labels)
-
-        img = tf.image.decode_png(img, channels=3)
-        labels = tf.image.decode_png(lables, channels=3)
+        labels = tf.io.read_file(labels)
+        try:
+            img = tf.image.decode_png(img, channels=3)
+        except:
+            img = tf.image.decode_jpeg(img, channels=3)
+        labels = tf.image.decode_png(labels, channels=3)
 
         img = tf.image.resize(img, (self.image_size[0], self.image_size[1]))
         labels = tf.image.resize(labels, (self.image_size[0], self.image_size[1]))
 
         img = tf.cast(img, dtype=tf.float32)
+
+        labels = labels[:, :, :1]
+
+        labels = tf.where(labels>0, 1, 0)
         labels = tf.cast(labels, dtype=tf.int64)
 
         img = preprocess_input(img, mode='tf')
