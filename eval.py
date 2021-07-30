@@ -1,20 +1,14 @@
 import tensorflow as tf
-import matplotlib.pyplot as plt
-from tensorflow.keras.callbacks import ModelCheckpoint
-from tensorflow.keras.mixed_precision import experimental as mixed_precision
 from models.model_builder import seg_model_build
-from models.loss import focal_loss
 from utils.data_generator import GenerateDatasets
-from utils.callbacks import Scalar_LR
-from utils.polyDecay import poly_decay
-from utils.adamW import LearningRateScheduler
+from tqdm import tqdm
 import argparse
 import time
 import os
 tf.keras.backend.clear_session()
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--batch_size",     type=int,   help="배치 사이즈값 설정", default=1)
+parser.add_argument("--batch_size",     type=int,   help="배치 사이즈값 설정", default=16)
 parser.add_argument("--epoch",          type=int,   help="에폭 설정", default=200)
 parser.add_argument("--lr",             type=float, help="Learning rate 설정", default=0.001)
 parser.add_argument("--weight_decay",   type=float, help="Weight Decay 설정", default=0.0005)
@@ -54,24 +48,21 @@ os.makedirs(CHECKPOINT_DIR, exist_ok=True)
 with tf.device('/device:GPU:0'):
     dataset_config = GenerateDatasets(mode='HKU', image_size=IMAGE_SIZE, batch_size=BATCH_SIZE)
 
-    train_data = dataset_config.get_trainData(dataset_config.train_data)
-    valid_data = dataset_config.get_validData(dataset_config.valid_data)
+    test_data = dataset_config.get_testData(dataset_config.valid_data)
 
-    # train = train_data.take(1)
-    train = valid_data.take(1)
-    for x,y in train:
-        # y = tf.argmax(y, axis=-1)
-        # y = tf.reduce_max(y, axis=-1)
+    test_steps = dataset_config.number_valid // BATCH_SIZE
 
-        q = y[:, :, :, :1]
+    model = seg_model_build(image_size=IMAGE_SIZE)
+    weight_name = '_0730_best_loss'
+    model.load_weights(CHECKPOINT_DIR + weight_name + '.h5')
 
-        labels = tf.where(q>0, 1, 0)
-        labels = tf.cast(labels, dtype=tf.int64)
-        # q /= 255
-        # labels = tf.cast(q, dtype=tf.int64)
+import matplotlib.pyplot as plt
+for x, y in tqdm(test_data, total=test_steps):
+    pred = model.predict_on_batch(x)#pred = tf.nn.softmax(pred)
+    pred = tf.argmax(pred, -1)
+    for i in range(len(pred)):
 
-        plt.imshow(labels[0])
+        plt.imshow(pred[i] * 255)
         plt.show()
-
 
 

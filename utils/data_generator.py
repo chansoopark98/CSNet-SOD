@@ -132,3 +132,9 @@ class GenerateDatasets:
         valid_data = valid_data.repeat()
         valid_data = valid_data.batch(self.batch_size).prefetch(AUTO)
         return valid_data
+
+    def get_testData(self, valid_data):
+
+        valid_data = valid_data.map(self.preprocess)
+        valid_data = valid_data.batch(self.batch_size).prefetch(AUTO)
+        return valid_data
