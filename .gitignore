@@ -1,5 +1,8 @@
 # Byte-compiled / optimized / DLL files
 __pycache__/
+tensorboard/
+checkpoints/
+datasets/
 *.py[cod]
 *$py.class
 
